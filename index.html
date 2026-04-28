@@ -1,0 +1,29 @@
+<!doctype html> <html lang="ja"> <head> <meta charset="utf-8"> <title>ドキドキ＋10チャレンジの運動消費カロリー</title> <meta name="viewport" content="width=device-width,initial-scale=1"> <style> body { font-family: sans-serif; max-width:700px; margin:20px auto; padding:10px; } label { display:block; margin-top:10px; } input, select { width:100%; padding:8px; box-sizing:border-box; margin-top:4px; } button { margin-top:12px; padding:10px 16px; } .result { margin-top:16px; padding:12px; border:1px solid #ddd; background:#f9f9f9; } .note { font-size:0.9em; color:#555; margin-top:8px; } .small { font-size:0.9em; color:#666; } </style> </head> <body> <h2>ドキドキ＋10チャレンジの運動消費カロリー（推定）</h2>
+<label>患者さんの年齢（歳）
+<input id="age" type="number" min="10" max="120" value="40">
+</label>
+
+<label>患者さんの性別
+<select id="sex">
+<option value="male">男性</option>
+<option value="female">女性</option>
+</select>
+</label>
+
+<label>患者さんの体重（kg）
+<input id="weight" type="number" min="20" max="300" step="0.1" value="70">
+</label>
+
+<label>安静時のドキドキ回数
+<input id="rest15" type="number" min="0" max="50" value="15" >
+<div class="small">例：15秒で15回なら安静時心拍数は 15×4 = 60 bpm</div>
+</label>
+
+<label>なわとび後のドキドキ回数
+<input id="exercise15" type="number" min="0" max="60" value="35">
+<div class="small">例：15秒で35回なら運動時心拍数は 35×4 = 140 bpm</div>
+</label>
+
+<button id="calcBtn">なわとび1時間の消費カロリーを計算する</button>
+
+<div id="output" class="result" style="display:none;"></div> <div class="note"> 注意：本ページは推定値を示します。VO2maxは年齢・性別から簡易推定式で算出しています。心拍測定条件や個人差により誤差があります。医療用途には使用しないでください。 </div> <script> // Tanaka式で最大心拍数推定 function tanakaMaxHR(age){ return 208 - 0.7 * age; } // 性別・年齢に基づく簡易VO2max推定（目安） function estimateVO2max(age, sex){ if(sex === 'male'){ return Math.max(15, 60 - 0.55 * age); } else { return Math.max(12, 48 - 0.37 * age); } } document.getElementById('calcBtn').addEventListener('click', function(){ var age = Number(document.getElementById('age').value); var sex = document.getElementById('sex').value; var weight = Number(document.getElementById('weight').value); var rest15 = Number(document.getElementById('rest15').value); var exercise15 = Number(document.getElementById('exercise15').value); // バリデーション if(!age || !weight || rest15===null || exercise15===null){ alert('年齢・性別・体重・両方の15秒カウントを入力してください。'); return; } // 15秒カウントをbpmに変換 var hrRest = rest15 * 4; var hrExercise = exercise15 * 4; if(hrExercise <= hrRest){ if(!confirm('なわとび後の心拍が安静時と同じか低く見えます。本当にこのまま計算しますか？')) { return; } } var hrMax = tanakaMaxHR(age); var hrReserveDenom = hrMax - hrRest; var pctHRreserve = 0; if(hrReserveDenom > 0){ pctHRreserve = (hrExercise - hrRest) / hrReserveDenom; if(pctHRreserve < 0) pctHRreserve = 0; if(pctHRreserve > 1.5) pctHRreserve = 1.5; } var vo2max = estimateVO2max(age, sex); var vo2Rest = 3.5; // ml/kg/min var vo2Exercise = pctHRreserve * (vo2max - vo2Rest) + vo2Rest; // ml/kg/min var met = vo2Exercise / 3.5; var hours = 1.0; // 常に1時間 var kcal = met * weight * hours; var out = document.getElementById('output'); out.style.display = 'block'; out.innerHTML = '<strong>計算結果（推定・1時間）</strong><br>' + '入力（15秒カウント → bpm換算）: 安静 ' + rest15 + '回 → ' + hrRest + ' bpm, ' + 'なわとび後 ' + exercise15 + '回 → ' + hrExercise + ' bpm<br>' + '推定HRmax (Tanaka式): ' + hrMax.toFixed(0) + ' bpm<br>' + '推定VO2max（年齢・性別からの目安）: ' + vo2max.toFixed(1) + ' ml/kg/min<br>' + '運動時の推定VO2: ' + vo2Exercise.toFixed(1) + ' ml/kg/min<br>' + '推定MET: ' + met.toFixed(2) + ' MET<br>' + '消費カロリー（推定）: ' + kcal.toFixed(0) + ' kcal（1 時間）<br>' + '<div style="margin-top:8px;font-size:0.9em;color:#555;">注: 簡易推定を用いています。個人差や測定条件で誤差が生じます。</div>'; }); </script> </body> </html>
